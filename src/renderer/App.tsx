@@ -91,7 +91,7 @@ export default function App() {
           {navigation.map((item) => {
             const Icon = item.icon;
             return (
-              <NavLink key={item.to} to={item.to} end={item.to === "/"}>
+              <NavLink key={item.to} to={item.to} end={item.to === "/"} title={item.label}>
                 <Icon size={18} />
                 <span>{item.label}</span>
               </NavLink>
@@ -156,8 +156,9 @@ function PageFrame({
   children: React.ReactNode;
   aside?: React.ReactNode;
 }) {
+  const resolvedAside = aside === undefined ? <RedactionNote /> : aside;
   return (
-    <section className="page-grid">
+    <section className={resolvedAside ? "page-grid" : "page-grid no-inspector"}>
       <div className="content-flow">
         <div className="page-title">
           {icon}
@@ -165,7 +166,7 @@ function PageFrame({
         </div>
         {children}
       </div>
-      <aside className="inspector">{aside || <RedactionNote />}</aside>
+      {resolvedAside ? <aside className="inspector">{resolvedAside}</aside> : null}
     </section>
   );
 }
@@ -189,11 +190,12 @@ function OverviewPage() {
     <PageFrame
       title="Codex 总览"
       icon={<Activity size={24} />}
-      aside={<OverviewInspector data={state.data} refresh={state.refresh} />}
+      aside={null}
     >
       <LoadBlock state={state}>
         {(data) => (
           <>
+            <OverviewHero data={data} refresh={state.refresh} />
             <MetricStrip
               items={[
                 ["数据源", data.health.exists ? "可读" : "缺失"],
@@ -203,6 +205,9 @@ function OverviewPage() {
                 ["模型", String(data.model?.name || "-")]
               ]}
             />
+            <Section title="检查入口">
+              <DomainGrid data={data} />
+            </Section>
             <Section title="目录库存">
               <DataTable
                 rows={data.directories}
@@ -233,27 +238,87 @@ function OverviewPage() {
   );
 }
 
-function OverviewInspector({ data, refresh }: { data: Overview | null; refresh: () => void }) {
-  const sqlite = (data?.health.sqlite || {}) as JsonRecord;
+function OverviewHero({ data, refresh }: { data: Overview; refresh: () => void }) {
+  const sqlite = (data.health.sqlite || {}) as JsonRecord;
+  const sqliteOk = Object.values(sqlite).filter((item) => (item as JsonRecord).ok).length;
   return (
-    <>
-      <button className="wide-action" type="button" onClick={refresh}>
+    <section className="overview-hero">
+      <div className="hero-status">
+        <span className={data.health.exists ? "status-dot ok" : "status-dot bad"} />
+        <div>
+          <span>Codex Home</span>
+          <strong>{data.health.codexHome}</strong>
+        </div>
+      </div>
+      <div className="hero-summary">
+        <div>
+          <span>SQLite</span>
+          <strong>
+            {sqliteOk}/{Object.keys(sqlite).length} 可读
+          </strong>
+        </div>
+        <div>
+          <span>脱敏策略</span>
+          <strong>默认开启</strong>
+        </div>
+        <div>
+          <span>最近检查</span>
+          <strong>{formatTime(data.health.timestamp)}</strong>
+        </div>
+      </div>
+      <button type="button" onClick={refresh}>
         <RefreshCw size={16} />
         重新读取
       </button>
-      <Section title="SQLite 状态" compact>
-        {Object.entries(sqlite).map(([name, value]) => {
-          const item = value as JsonRecord;
-          return (
-            <div className="mini-row" key={name}>
-              <span>{name}</span>
-              <strong>{item.ok ? `${item.rows ?? 0} rows` : "不可用"}</strong>
-            </div>
-          );
-        })}
-      </Section>
-      <RedactionNote />
-    </>
+    </section>
+  );
+}
+
+function DomainGrid({ data }: { data: Overview }) {
+  const findDir = (name: string) => data.directories.find((dir) => dir.name === name);
+  const groups = [
+    {
+      icon: <FileCog size={18} />,
+      title: "运行与配置",
+      description: "配置、MCP、可信项目和 hooks。",
+      stat: `${data.mcpCount} MCP · ${data.projectCount} 项目`,
+      to: "/settings"
+    },
+    {
+      icon: <History size={18} />,
+      title: "会话活动",
+      description: "活动会话、归档会话和工具调用线索。",
+      stat: `${findDir("sessions")?.files || 0} 活动 · ${findDir("archived_sessions")?.files || 0} 归档`,
+      to: "/sessions"
+    },
+    {
+      icon: <Brain size={18} />,
+      title: "知识与扩展",
+      description: "记忆、skills、agents、prompts 和插件缓存。",
+      stat: `${findDir("memories")?.files || 0} 记忆 · ${findDir("skills")?.files || 0} skills`,
+      to: "/memories"
+    },
+    {
+      icon: <TerminalSquare size={18} />,
+      title: "状态与诊断",
+      description: "threads、dynamic tools、logs 和 SQLite 状态。",
+      stat: `${formatBytes(findDir("cache")?.size || 0)} cache`,
+      to: "/state"
+    }
+  ];
+  return (
+    <div className="domain-grid">
+      {groups.map((group) => (
+        <NavLink to={group.to} className="domain-card" key={group.title}>
+          <div className="domain-icon">{group.icon}</div>
+          <div>
+            <strong>{group.title}</strong>
+            <span>{group.description}</span>
+          </div>
+          <em>{group.stat}</em>
+        </NavLink>
+      ))}
+    </div>
   );
 }
 
@@ -285,6 +350,14 @@ function SessionsPage() {
       <LoadBlock state={state}>
         {(rows) => (
           <div className="list-table">
+            <div className="session-row session-head">
+              <span>会话 / 工作目录</span>
+              <span>模型</span>
+              <span>状态</span>
+              <span>工具</span>
+              <span>错误</span>
+              <span>最近更新</span>
+            </div>
             {rows.map((row) => (
               <button
                 type="button"

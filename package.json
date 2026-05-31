@@ -1,6 +1,6 @@
 {
   "name": "codex-local-observer",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "Local-first desktop observer for OpenAI Codex configuration, sessions, memories, skills, plugins, threads, and logs.",
   "main": "electron/main.cjs",
