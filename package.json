@@ -1,0 +1,75 @@
+{
+  "name": "codex-local-observer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first desktop observer for OpenAI Codex configuration, sessions, memories, skills, plugins, threads, and logs.",
+  "main": "electron/main.cjs",
+  "author": "llliii666",
+  "license": "MIT",
+  "scripts": {
+    "dev": "npm run dev:electron",
+    "dev:renderer": "vite --host 127.0.0.1 --port 5173",
+    "dev:electron": "concurrently -k \"npm run dev:renderer\" \"wait-on http://127.0.0.1:5173 && electron .\"",
+    "build": "tsc --noEmit && vite build",
+    "start": "electron .",
+    "smoke:electron": "electron . --smoke",
+    "doctor": "node scripts/doctor.cjs",
+    "test": "vitest run",
+    "secret:scan": "node scripts/secret-scan.cjs",
+    "icon": "node scripts/generate-icon.cjs",
+    "dist:win": "npm run icon && npm run build && electron-builder --win nsis",
+    "package:portable": "npm run icon && npm run build && electron-builder --win portable",
+    "verify": "npm run doctor && npm run test && npm run build && npm run smoke:electron && npm run secret:scan"
+  },
+  "dependencies": {
+    "lucide-react": "^0.562.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "react-router-dom": "^7.10.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "concurrently": "^9.2.1",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.7",
+    "vitest": "^4.0.15",
+    "wait-on": "^9.0.3"
+  },
+  "build": {
+    "appId": "dev.codex.localobserver",
+    "productName": "Codex Local Observer",
+    "asar": true,
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.ico",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Codex Local Observer",
+      "runAfterFinish": true
+    }
+  }
+}

@@ -1,0 +1,13 @@
+model = "gpt-5.5"
+model_reasoning_effort = "high"
+experimental_bearer_token = "fixture-secret"
+
+[mcp_servers.example]
+command = "node"
+args = ["server.js"]
+
+[plugins."build-web-apps@openai-curated"]
+enabled = true
+
+[projects.'%USERPROFILE%\example']
+trust_level = "trusted"
