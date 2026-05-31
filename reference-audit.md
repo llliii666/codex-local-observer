@@ -5,13 +5,16 @@
 - `creative-reference-vault/index.yaml`: local reference rule source for app UI, QA expectations, and reuse boundaries.
 - `ai-learning-navigator/`: dense static app shell with readable navigation and mobile QA precedent.
 - `showcase.21st-dev` and `showcase.bento-grids` from `creative-reference-vault/showcases/showcase-candidates.yaml`: used as local inspiration for grouped status panels and clearer information hierarchy, not copied.
+- `showcases/local-builds/bento-ai-command-center/`: used for bento-style operational hierarchy, warm/cool accent balance, status cards, and product-control density.
+- `showcases/local-builds/react-bits-interaction-lab/`: used for restrained interaction cues: entrance motion, hover lift, status pulse, and reduced-motion fallback. No dark hero typography was copied into the app shell.
 - `tobitege/codlogs`: upstream Codex session search/export/redaction reference, used as behavior inspiration only.
 - `Cocoanetics/CodexMonitor`: upstream Codex session watching reference, used as monitoring inspiration only.
 
 ## Borrow
 
 - Layout: left navigation, compact status header, grouped overview domains, session list headers, and inspector panels only where they add context.
-- Visual system: restrained operational workspace with neutral surfaces, stronger type contrast, one blue accent, and clear health states.
+- Visual system: restrained operational workspace with neutral surfaces, stronger type contrast, blue/teal/amber accents, dark status band, and clear health states.
+- Product flow: a dedicated install/download page that separates recommended installer, portable mode, source mode, safety boundary, and AI automation prompt.
 - Assets: self-generated icon only; no Codex, OpenAI, or upstream project trademarks.
 - QA pattern: local fixtures, secret scan, build verification, and desktop packaging smoke checks.
 
@@ -27,6 +30,7 @@
 - Expand beyond sessions into Codex settings, memories, skills, plugins, threads, and logs.
 - Make redaction and local-only boundaries visible in the product and enforced in scripts.
 - Remove compressed table layouts, overlapping columns, and low-contrast microcopy from the first viewport.
+- Avoid card-in-card section framing; repeated cards, tables, and command panels should be the visible surfaces, while section wrappers stay structural.
 
 ## Assets And Provenance
 

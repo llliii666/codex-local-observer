@@ -4,22 +4,30 @@ import {
   BookOpen,
   Boxes,
   Brain,
+  CheckCircle2,
+  Copy,
+  Download,
+  ExternalLink,
   FileCog,
   FileJson,
   FolderOpen,
   History,
   KeyRound,
   ListTree,
+  MonitorDown,
   Plug,
+  Rocket,
   RefreshCw,
   Search,
   ServerCog,
   ShieldCheck,
+  Sparkles,
   TerminalSquare
 } from "lucide-react";
 import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, asRows, formatBytes, formatTime, Health, JsonRecord, Overview, SessionSummary } from "./api";
+import packageJson from "../../package.json";
 
 type LoadState<T> = {
   data: T | null;
@@ -49,8 +57,15 @@ const navigation = [
   { to: "/skills", label: "Skills/Agents", icon: BookOpen },
   { to: "/plugins", label: "插件缓存", icon: Plug },
   { to: "/state", label: "Threads/State", icon: ServerCog },
-  { to: "/logs", label: "Logs", icon: TerminalSquare }
+  { to: "/logs", label: "Logs", icon: TerminalSquare },
+  { to: "/install", label: "安装", icon: MonitorDown }
 ];
+
+const APP_VERSION = packageJson.version;
+const RELEASE_BASE = `https://github.com/llliii666/codex-local-observer/releases/download/v${APP_VERSION}`;
+const INSTALLER_URL = `${RELEASE_BASE}/Codex.Local.Observer.Setup.${APP_VERSION}.exe`;
+const PORTABLE_URL = `${RELEASE_BASE}/Codex.Local.Observer.${APP_VERSION}.exe`;
+const RELEASE_URL = `https://github.com/llliii666/codex-local-observer/releases/tag/v${APP_VERSION}`;
 
 export default function App() {
   const [health, setHealth] = useState<Health | null>(null);
@@ -139,6 +154,7 @@ export default function App() {
           <Route path="/plugins" element={<PluginsPage />} />
           <Route path="/state" element={<StatePage />} />
           <Route path="/logs" element={<LogsPage />} />
+          <Route path="/install" element={<InstallPage />} />
         </Routes>
       </main>
     </div>
@@ -634,6 +650,139 @@ function LogsPage() {
           />
         )}
       </LoadBlock>
+    </PageFrame>
+  );
+}
+
+function InstallPage() {
+  const [copied, setCopied] = useState(false);
+  const aiPrompt = useMemo(
+    () =>
+      [
+        "你是本机自动化工程代理。请把公开项目 codex-local-observer clone 到本机，安装并连接我的本机 Codex 数据。",
+        "注意：这是只针对 Codex 的项目，与其他代理软件无关，不要读取或展示非 Codex 内容。",
+        "",
+        "目标：",
+        "- 优先安装 Windows NSIS 安装包，安装后生成桌面图标，双击即可打开 Codex Local Observer。",
+        "- 页面能查看本机 Codex 的设置、记忆、会话、skills、MCP、插件、agents、prompts、threads、logs 等内容。",
+        "- 所有敏感数据默认脱敏，不允许提交真实 Codex 数据到 GitHub。",
+        "",
+        "步骤：",
+        "1. git clone https://github.com/llliii666/codex-local-observer.git",
+        "2. cd codex-local-observer",
+        "3. npm install",
+        "4. npm run doctor",
+        "5. npm run verify",
+        "6. npm run dist:win",
+        "7. 安装 release 目录里的 NSIS 安装包，确认桌面出现 Codex Local Observer 图标。",
+        "8. 双击桌面图标，确认无需手动运行端口即可查看 Codex 本机数据。",
+        "9. git status 必须确认没有真实 auth.json、session、memory、SQLite、.env、token 或本机路径配置被提交。"
+      ].join("\n"),
+    []
+  );
+
+  const copyPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(aiPrompt);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  return (
+    <PageFrame title="安装 / 下载" icon={<MonitorDown size={24} />} aside={null}>
+      <section className="install-hero">
+        <div>
+          <span className="eyebrow">
+            <Sparkles size={15} />
+            Codex-only desktop release
+          </span>
+          <h2>优先下载安装包，安装后从桌面图标直接进入本机 Codex 控制台。</h2>
+          <p>
+            推荐使用 NSIS 安装包。它会创建桌面图标和开始菜单项；portable 版本适合临时运行；源码模式只用于二次开发。
+          </p>
+        </div>
+        <div className="release-panel">
+          <span>当前发布</span>
+          <strong>v{APP_VERSION}</strong>
+          <a href={RELEASE_URL} target="_blank" rel="noreferrer">
+            查看 GitHub Release
+            <ExternalLink size={14} />
+          </a>
+        </div>
+      </section>
+
+      <div className="download-actions">
+        <a className="download-action primary" href={INSTALLER_URL} target="_blank" rel="noreferrer">
+          <Download size={18} />
+          <span>
+            <strong>下载安装包</strong>
+            <em>推荐：自动创建桌面图标</em>
+          </span>
+        </a>
+        <a className="download-action" href={PORTABLE_URL} target="_blank" rel="noreferrer">
+          <Rocket size={18} />
+          <span>
+            <strong>下载免安装版</strong>
+            <em>单个 exe，适合临时验证</em>
+          </span>
+        </a>
+        <a className="download-action" href="https://github.com/llliii666/codex-local-observer" target="_blank" rel="noreferrer">
+          <ExternalLink size={18} />
+          <span>
+            <strong>查看源码仓库</strong>
+            <em>README、脚本和脱敏 fixtures</em>
+          </span>
+        </a>
+      </div>
+
+      <div className="install-grid">
+        <article className="install-card featured">
+          <span className="card-kicker">推荐路径</span>
+          <h3>普通用户安装</h3>
+          <ol className="step-list">
+            <li>下载 `Codex Local Observer Setup {APP_VERSION}.exe`。</li>
+            <li>按安装向导完成安装，保留桌面快捷方式。</li>
+            <li>双击桌面图标打开，不需要手动运行命令或端口。</li>
+            <li>进入应用后自动识别 `CODEX_HOME` 或 `%USERPROFILE%\\.codex`。</li>
+          </ol>
+        </article>
+        <article className="install-card">
+          <span className="card-kicker">开发者路径</span>
+          <h3>源码运行与打包</h3>
+          <pre className="command-block">{["npm install", "npm run doctor", "npm run dev:electron", "npm run verify", "npm run dist:win"].join("\n")}</pre>
+        </article>
+        <article className="install-card">
+          <span className="card-kicker">安全边界</span>
+          <h3>公开仓库不包含真实数据</h3>
+          <ul className="safety-list">
+            <li>
+              <CheckCircle2 size={16} />
+              auth、token、cookie 和 API key 默认只显示元数据。
+            </li>
+            <li>
+              <CheckCircle2 size={16} />
+              会话和记忆正文默认脱敏展示。
+            </li>
+            <li>
+              <CheckCircle2 size={16} />
+              发布前运行 `npm run secret:scan`。
+            </li>
+          </ul>
+        </article>
+      </div>
+
+      <Section title="给 AI 的自动化提示词">
+        <div className="prompt-panel">
+          <button type="button" onClick={copyPrompt}>
+            <Copy size={16} />
+            {copied ? "已复制" : "复制提示词"}
+          </button>
+          <pre>{aiPrompt}</pre>
+        </div>
+      </Section>
     </PageFrame>
   );
 }
